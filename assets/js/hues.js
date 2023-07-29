@@ -1035,7 +1035,7 @@
 
   var loadRespackSongLoop = function(respack, song) {
     return new Promise(function(resolve, reject) {
-      var uri = respack["uri"] + "/Songs/" + encodeURIComponent(song["loop"]);
+      var uri = respack["uri"] + "/" + encodeURIComponent(song["loop"]);
       loadRespackSongTrack(uri)
       .catch(reject)
       .then(function(audioBuffer) {
@@ -1052,8 +1052,7 @@
         return;
       }
 
-      var uri = respack["uri"] + "/Songs/" +
-            encodeURIComponent(song["buildup"]);
+      var uri = respack["uri"] + "/" + encodeURIComponent(song["buildup"]);
       loadRespackSongTrack(uri)
       .catch(reject)
       .then(function(audioBuffer) {
@@ -1137,7 +1136,7 @@
     });
   }
 
-  var loadRespackImageFetch = function(uri) {
+  var fetchResource = function(uri) {
     return new Promise(function(resolve, reject) {
       fetch(uri)
       .catch(reject)
@@ -1151,18 +1150,27 @@
     });
   }
 
+  var loadRespackImageFetch = function(uri) {
+    return Promise.any([
+      fetchResource(uri + ".png"),
+      fetchResource(uri + ".jpg"),
+      fetchResource(uri + ".gif"),
+    ]);
+  }
+
+  var loadRespackImageAnimationFrameFetch = function(uriprefix, i) {
+    var number = String(i);
+    var variations = new Set([number, number.padStart(2,'0'), number.padStart(3,'0')]);
+    return Promise.any([...variations].map(n => loadRespackImageFetch(uriprefix + "_" + n))
+    );
+  }
+
   var loadRespackImageAnimationFrame = function(respack, image, i) {
     return new Promise(function(resolve, reject) {
       var name = encodeURIComponent(image["name"]);
-      var number = i.toString();
-      if (number.length < 2) {
-        number = "0" + number;
-      }
-      loadRespackImageFetch(respack["uri"] + "/Animations/" +
-          name + "/" + name + "_" + number + ".png")
+      loadRespackImageAnimationFrameFetch(respack["uri"] + "/" + name, i)
       .catch(function() {
-        return loadRespackImageFetch(respack["uri"] + "/Images/" +
-            name + "/" + name + "_" + number + ".png")
+        return loadRespackImageAnimationFrameFetch(respack["uri"] + "/" + name, i)
       })
       .then(function(response) { return response.blob() })
       .then(function(blob) {
@@ -1175,13 +1183,7 @@
         .catch(reject);
       })
       .catch(function(error) {
-        if (error === 404) {
-          console.log("If you got a 404 error there it was expected and " +
-                "unavoidable... You can just ignore it.");
-          resolve(image);
-        } else {
-          reject(error)
-        }
+        resolve(image);
       })
     });
   }
@@ -1189,15 +1191,9 @@
   var loadRespackImageAnimationFrame2 = function(respack, image, i) {
     return new Promise(function(resolve, reject) {
       var name = encodeURIComponent(image["name"]);
-      var number = i.toString();
-      if (number.length < 2) {
-        number = "0" + number;
-      }
-      loadRespackImageFetch(respack["uri"] + "/Animations/" +
-          name + "/" + name + "_" + number + ".png")
+      loadRespackImageAnimationFrameFetch(respack["uri"] + "/" + name, i)
       .catch(function() {
-        return loadRespackImageFetch(respack["uri"] + "/Images/" +
-            name + "/" + name + "_" + number + ".png")
+        return loadRespackImageAnimationFrameFetch(respack["uri"] + "/" + name, i)
       })
       .then(function(response) { return response.blob() })
       .then(function(blob) {
@@ -1215,6 +1211,9 @@
   var loadRespackImageAnimation = function(respack, image) {
     console.log("Starting animation load for " + image.name);
     return new Promise(function(resolve, reject) {
+      if (image["frameDuration"] === undefined) {
+        image["frameDuration"] = 20;
+      }
       image.frames = parseInt(image.frames);
       if (isFinite(image.frames)) {
         // This is an enhanced respack that includes frame counts! Yay!
@@ -1270,7 +1269,7 @@
   var loadRespackImageSingle = function(respack, image) {
     return new Promise(function(resolve, reject) {
       var name = encodeURIComponent(image["name"]);
-      loadRespackImageFetch(respack["uri"] + "/Images/" + name + ".png")
+      loadRespackImageFetch(respack["uri"] + "/" + name)
       .then(function(response) { return response.blob() })
       .then(function(blob) {
         Promise.resolve(self.callEventListeners("imageload", image, blob))
@@ -1283,11 +1282,23 @@
   }
 
   var loadRespackImageMedia = function(respack, image) {
-    if (image["frameDuration"]) {
+    /*if (image["frameDuration"]) {
       return loadRespackImageAnimation(respack, image);
     } else {
-      return loadRespackImageSingle(respack, image);
-    }
+      return loadRespackImageAnimation(respack, image);
+    }*/
+    return new Promise(function(resolve, reject) {
+      Promise.any([
+        loadRespackImageSingle(respack, image),
+        loadRespackImageAnimation(respack, image)
+      ])
+      .catch(function() {
+        reject(Error("Failed to load single image or animation of " + image["name"]));
+      })
+      .then(function() {
+        resolve(image);
+      })
+    });
   }
 
   var loadRespackImages = function(respack) {

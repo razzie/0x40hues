@@ -20,9 +20,9 @@ var (
 )
 
 type HuesConfig struct {
-	Respack       string `json:"respack"`
-	DefaultString int    `json:"defaultSong"`
-	AutoPlay      bool   `json:"autoPlay"`
+	Respack     string `json:"respack"`
+	DefaultSong int    `json:"defaultSong"`
+	AutoPlay    bool   `json:"autoPlay"`
 }
 
 func loadTemplate(templateName, filename string) (*template.Template, error) {
@@ -50,7 +50,11 @@ func listRespacks() ([]string, error) {
 	}
 	for _, fileInfo := range fileInfos {
 		if fileInfo.IsDir() {
-			respacks = append(respacks, fileInfo.Name())
+			name := fileInfo.Name()
+			if name == "builtin" {
+				continue
+			}
+			respacks = append(respacks, name)
 		}
 	}
 	return respacks, nil
