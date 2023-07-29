@@ -112,7 +112,7 @@ window.HuesUIModern = (function() {
 
       link.href = image.source
 
-      var textContent = image.fullname.toUpperCase()
+      var textContent = image.name.toUpperCase()
       text.textContent = textContent
       this.imageNameTextLength = textContent.length;
 

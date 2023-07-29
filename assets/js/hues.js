@@ -1355,10 +1355,10 @@
       // Strip a trailing /, since we're going to be generating uris with this
       // as the base.
       if (uri.slice(-1) == "/") {
-        uri = uri.slice(0, -1);
+        uri = "../" + uri.slice(0, -1);
       }
       if (uri.indexOf(":") < 0) {
-        uri = "respacks/" + uri;
+        uri = "../respacks/" + uri;
       }
       var respack = {
         "uri": uri
