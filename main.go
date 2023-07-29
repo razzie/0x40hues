@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 )
 
 //go:embed assets
@@ -64,6 +65,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	sort.Strings(respacks)
 	log.Println("Respacks:", respacks)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
