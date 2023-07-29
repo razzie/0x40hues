@@ -14,8 +14,7 @@ RUN rm *.zip
 
 FROM alpine
 WORKDIR /
-RUN mkdir -p respacks
-COPY --from=respacks /workspace/* ./respacks/
-COPY ./respacks/builtin ./respacks/
+COPY --from=respacks /workspace ./respacks
+COPY ./respacks/builtin ./respacks/builtin
 COPY --from=builder /workspace/0x40hues .
 ENTRYPOINT ["/0x40hues"]
