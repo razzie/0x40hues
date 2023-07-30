@@ -1136,13 +1136,30 @@
     });
   }
 
-  var fetchResource = function(uri) {
+  var fetchResource = function(uris, errors) {
+    if (!Array.isArray(uris)) {
+      uris = [uris];
+    }
+    if (errors === undefined) {
+      errors = [];
+    }
     return new Promise(function(resolve, reject) {
-      fetch(uri)
-      .catch(reject)
+      if (uris.length === 0) {
+        reject(errors);
+      }
+      fetch(uris[0])
+      .catch(function(error) {
+        errors.push(error);
+        fetchResource(uris.slice(1), errors)
+        .catch(reject)
+        .then(resolve);
+      })
       .then(function(response) {
         if (!response.ok) {
-          reject(response.status);
+          errors.push(response.status);
+          fetchResource(uris.slice(1), errors)
+          .catch(reject)
+          .then(resolve);
           return;
         }
         resolve(response);
@@ -1150,19 +1167,18 @@
     });
   }
 
-  var loadRespackImageFetch = function(uri) {
-    return Promise.any([
-      fetchResource(uri + ".png"),
-      fetchResource(uri + ".jpg"),
-      fetchResource(uri + ".gif"),
-    ]);
+  var loadRespackImageFetch = function(uriprefixes) {
+    if (!Array.isArray(uriprefixes)) {
+      uriprefixes = [uriprefixes];
+    }
+    var extensions = [".png", ".jpg", ".gif"];
+    return fetchResource(uriprefixes.flatMap(uriprefix => extensions.map(ext => uriprefix+ext)));
   }
 
   var loadRespackImageAnimationFrameFetch = function(uriprefix, i) {
     var number = String(i);
     var variations = new Set([number, number.padStart(2,'0'), number.padStart(3,'0')]);
-    return Promise.any([...variations].map(n => loadRespackImageFetch(uriprefix + "_" + n))
-    );
+    return loadRespackImageFetch([...variations].map(n => uriprefix + "_" + n));
   }
 
   var loadRespackImageAnimationFrame = function(respack, image, i) {
@@ -1235,15 +1251,11 @@
           );
         }
 
-	Promise.all(promises)
+	      Promise.all(promises)
         .then(resolve)
         .catch(function(error) {
-          if (error === 404) {
             resolve(new Error("Some animation frames for " + image.name +
                     " failed to load"));
-          } else {
-            reject(error);
-          }
         });
       } else {
         // Standard respack animations are a bit tricky, since the xml file
