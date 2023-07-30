@@ -663,9 +663,9 @@
   var changeImage = function(imageIndex) {
     var images = self["images"];
     var image = images[imageIndex];
-    if (typeof(image) === "undefined") {
+    /*if (typeof(image) === "undefined") {
       throw Error("Image index " + imageIndex + " out of range");
-    }
+    }*/
 
     self["imageIndex"] = imageIndex;
     self["image"] = image;
@@ -1184,10 +1184,7 @@
   var loadRespackImageAnimationFrame = function(respack, image, i) {
     return new Promise(function(resolve, reject) {
       var name = encodeURIComponent(image["name"]);
-      loadRespackImageAnimationFrameFetch(respack["uri"] + "/" + name, i)
-      .catch(function() {
-        return loadRespackImageAnimationFrameFetch(respack["uri"] + "/" + name, i)
-      })
+      loadRespackImageAnimationFrameFetch(image["uri"] || respack["uri"] + "/" + name, i)
       .then(function(response) { return response.blob() })
       .then(function(blob) {
         image.frames = i;
@@ -1207,10 +1204,7 @@
   var loadRespackImageAnimationFrame2 = function(respack, image, i) {
     return new Promise(function(resolve, reject) {
       var name = encodeURIComponent(image["name"]);
-      loadRespackImageAnimationFrameFetch(respack["uri"] + "/" + name, i)
-      .catch(function() {
-        return loadRespackImageAnimationFrameFetch(respack["uri"] + "/" + name, i)
-      })
+      loadRespackImageAnimationFrameFetch(image["uri"] || respack["uri"] + "/" + name, i)
       .then(function(response) { return response.blob() })
       .then(function(blob) {
         image.frames = i;
@@ -1281,7 +1275,7 @@
   var loadRespackImageSingle = function(respack, image) {
     return new Promise(function(resolve, reject) {
       var name = encodeURIComponent(image["name"]);
-      loadRespackImageFetch(respack["uri"] + "/" + name)
+      loadRespackImageFetch(image["uri"] || respack["uri"] + "/" + name)
       .then(function(response) { return response.blob() })
       .then(function(blob) {
         Promise.resolve(self.callEventListeners("imageload", image, blob))
@@ -1320,7 +1314,17 @@
       .then(function(response) {
         
         if (response.status == 404) {
-          resolve(respack);
+          var defaultImage = {
+            name: "Default",
+            uri: "../respacks/builtin/Default",
+          };
+          loadRespackImageSingle(respack, defaultImage)
+            .then(function() {
+              respack["images"] = [defaultImage];
+              self.callEventListeners("progress", 1, 0);
+              resolve(respack);
+            })
+            .catch(reject)
           return;
         }
         

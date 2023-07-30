@@ -1,8 +1,5 @@
 #!/bin/bash
 find . -type f -name "*.zip" -print0 | while IFS= read -r -d $'\0' zipfile; do
-    if [ $(unzip -Z1 "$zipfile" | grep 'images.xml' | wc -l) -eq 0 ]; then
-        continue
-    fi
     if [ $(unzip -Z1 "$zipfile" | grep 'songs.xml' | wc -l) -eq 0 ]; then
         continue
     fi
