@@ -30,6 +30,14 @@ func listRespacks(respackDir string) ([]string, error) {
 	return respacks, nil
 }
 
+func sortRespacks(respacks []*Respack) {
+	sort.Slice(respacks, func(i, j int) bool {
+		iResCount := respacks[i].ImageCount() + respacks[i].SongCount()
+		jResCount := respacks[j].ImageCount() + respacks[j].SongCount()
+		return iResCount > jResCount || (iResCount == jResCount && respacks[i].Name() < respacks[j].Name())
+	})
+}
+
 func main() {
 	var addr, respackDir string
 	flag.StringVar(&addr, "addr", ":8080", "HTTP listener address")
@@ -40,7 +48,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	sort.Strings(respackIDs)
 
 	log.Println("Loading respacks")
 	var respacks []*Respack
@@ -55,6 +62,8 @@ func main() {
 			respacks = append(respacks, respack)
 		}
 	}
+
+	sortRespacks(respacks)
 
 	router := GetHandlers(respacks)
 
