@@ -1146,6 +1146,7 @@
     return new Promise(function(resolve, reject) {
       if (uris.length === 0) {
         reject(errors);
+        return;
       }
       fetch(uris[0])
       .catch(function(error) {
@@ -1294,16 +1295,19 @@
       return loadRespackImageAnimation(respack, image);
     }*/
     return new Promise(function(resolve, reject) {
-      Promise.any([
-        loadRespackImageSingle(respack, image),
-        loadRespackImageAnimation(respack, image)
-      ])
+      loadRespackImageSingle(respack, image)
       .catch(function() {
-        reject(Error("Failed to load single image or animation of " + image["name"]));
+        loadRespackImageAnimation(respack, image)
+        .catch(function() {
+          reject(Error("Failed to load single image or animation of " + image["name"]));
+        })
+        .then(function() {
+          resolve(image);
+        })
       })
       .then(function() {
         resolve(image);
-      })
+      });
     });
   }
 
@@ -1314,9 +1318,10 @@
       .then(function(response) {
         
         if (response.status == 404) {
-          var defaultImage = {
+          resolve(respack);
+          /*var defaultImage = {
             name: "Default",
-            uri: "../respacks/builtin/Default",
+            uri: "respacks/builtin/Default",
           };
           loadRespackImageSingle(respack, defaultImage)
             .then(function() {
@@ -1324,7 +1329,7 @@
               self.callEventListeners("progress", 1, 0);
               resolve(respack);
             })
-            .catch(reject)
+            .catch(reject)*/
           return;
         }
         
@@ -1382,10 +1387,10 @@
       // Strip a trailing /, since we're going to be generating uris with this
       // as the base.
       if (uri.slice(-1) == "/") {
-        uri = "../" + uri.slice(0, -1);
+        uri = uri.slice(0, -1);
       }
       if (uri.indexOf(":") < 0) {
-        uri = "../respacks/" + uri;
+        uri = "respacks/" + uri;
       }
       var respack = {
         "uri": uri
@@ -1576,6 +1581,10 @@
 
     console.log("New song index is " + songIndex);
     var song = self["songs"][songIndex];
+    if (song === undefined) {
+      console.log("Song not found at index " + songIndex);
+      return;
+    }
     self["songIndex"] = songIndex;
     self["song"] = song;
 

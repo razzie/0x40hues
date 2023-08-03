@@ -3,15 +3,15 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>0x40 Hues</title>
-    <!--<link rel="stylesheet" type="text/css" media="all" href="css/pico.min.css">-->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <title>0x40 Hues - Respack selector</title>
+    <link rel="stylesheet" type="text/css" media="all" href="/css/pico.min.css">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">-->
   </head>
   <body>
     <main class="container">
         <ul>
             {{ range . }}
-            <li><a href="{{ . }}/">{{ . }}</a></li>
+            <li><a href="{{ .ID }}/">{{ .Name }}</a> ({{ .ImageCount }} image(s) + {{ .SongCount }} song(s))</li>
             {{ end }}
         </ul>
     </main>

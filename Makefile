@@ -1,5 +1,5 @@
 VERSION ?= `git describe --tags`
-BUILDFLAGS := -ldflags="-s -w" -gcflags=-trimpath=$(CURDIR)
+BUILDFLAGS := -mod=vendor -ldflags="-s -w" -gcflags=-trimpath=$(CURDIR)
 IMAGE_NAME := 0x40hues
 IMAGE_REGISTRY ?= ghcr.io/razzie
 FULL_IMAGE_NAME := $(IMAGE_REGISTRY)/$(IMAGE_NAME):$(VERSION)
