@@ -839,7 +839,7 @@ window.HuesEffect = (function() {
     },
 
     imageAnimationUpdate: function(time) {
-      if (!self.imageAnimated) {
+      if (!self.imageAnimated || self.image.textures === undefined) {
         return;
       }
 

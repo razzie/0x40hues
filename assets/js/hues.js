@@ -1323,17 +1323,6 @@
         
         if (response.status == 404) {
           resolve(respack);
-          /*var defaultImage = {
-            name: "Default",
-            uri: "respacks/builtin/Default",
-          };
-          loadRespackImageSingle(respack, defaultImage)
-            .then(function() {
-              respack["images"] = [defaultImage];
-              self.callEventListeners("progress", 1, 0);
-              resolve(respack);
-            })
-            .catch(reject)*/
           return;
         }
         
