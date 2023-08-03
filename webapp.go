@@ -17,6 +17,14 @@ import (
 var assets embed.FS
 
 var (
+	templateFuncs = template.FuncMap{
+		"mod": func(i, j int) bool {
+			return i%j == 0
+		},
+		"divide": func(a, b int) int {
+			return a / b
+		},
+	}
 	huesT       = must(loadTemplate("", "assets/index.html"))
 	respacksT   = must(loadTemplate("", "assets/respacks.html"))
 	builtinR    = must(LoadRespackFS(assets, "assets/builtin"))
@@ -65,6 +73,15 @@ func GetHandlers(respacks []*Respack) http.Handler {
 		huesT.Execute(w, &huesConfig{Respacks: respacks, AutoPlay: true})
 	})
 
+	r.Post("/combine", func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		respacks := make([]string, 0, len(r.Form))
+		for respack := range r.Form {
+			respacks = append(respacks, respack)
+		}
+		http.Redirect(w, r, "/"+strings.Join(respacks, "|")+"/", http.StatusSeeOther)
+	})
+
 	r.Get("/respacks/{respack}/*", func(w http.ResponseWriter, r *http.Request) {
 		respackID := chi.URLParam(r, "respack")
 		if respack, ok := respackMap[respackID]; ok {
@@ -90,7 +107,7 @@ func loadTemplate(templateName, filename string) (*template.Template, error) {
 	if err != nil {
 		return nil, err
 	}
-	tmpl, err := template.New(templateName).Parse(string(bytes))
+	tmpl, err := template.New(templateName).Funcs(templateFuncs).Parse(string(bytes))
 	if err != nil {
 		return nil, err
 	}

@@ -1037,7 +1037,9 @@
     return new Promise(function(resolve, reject) {
       var uri = respack["uri"] + "/" + encodeURIComponent(song["loop"]);
       loadRespackSongTrack(uri)
-      .catch(reject)
+      .catch(function() {
+        reject(Error("Could not find any supported audio track formats for " + song["loop"]));
+      })
       .then(function(audioBuffer) {
         song["loopBuffer"] = audioBuffer;
         resolve(song);
@@ -1054,7 +1056,9 @@
 
       var uri = respack["uri"] + "/" + encodeURIComponent(song["buildup"]);
       loadRespackSongTrack(uri)
-      .catch(reject)
+      .catch(function() {
+        reject(Error("Could not find any supported audio track formats for " + song["buildup"] + " buildup"));
+      })
       .then(function(audioBuffer) {
         song["buildupBuffer"] = audioBuffer;
         resolve(song);

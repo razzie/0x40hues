@@ -9,11 +9,25 @@
   </head>
   <body>
     <main class="container">
-        <ul>
-            {{ range . }}
-            <li><a href="{{ .ID }}/">{{ .Name }}</a> ({{ .ImageCount }} image(s) + {{ .SongCount }} song(s))</li>
+      <form action="/combine" method="post">
+        <div class="grid">
+          <div>
+          {{ $columnSep := divide (len .) 3 }}
+          {{ range $i, $respack := . }}
+            {{ if and (mod $i $columnSep) (gt $i 0) }}
+          </div><div>
             {{ end }}
-        </ul>
+            <label>
+              <input type="checkbox" name="{{ $respack.ID }}" value="{{ $respack.ID }}" role="switch">
+              <a href="{{ $respack.ID }}/">{{ $respack.Name }}</a>
+              ({{ $respack.ImageCount }} image{{ if not (eq $respack.ImageCount 1) }}s{{ end }}
+              + {{ $respack.SongCount }} song{{ if not (eq $respack.SongCount 1) }}s{{ end }})
+            </label>
+          {{ end }}
+          </div>
+        </div>
+        <input type="submit" value="Combine">
+      </form>
     </main>
   </body>
 </html>
