@@ -1293,26 +1293,25 @@
   }
 
   var loadRespackImageMedia = function(respack, image) {
-    /*if (image["frameDuration"]) {
+    if (image["frameDuration"]) {
       return loadRespackImageAnimation(respack, image);
     } else {
-      return loadRespackImageAnimation(respack, image);
-    }*/
-    return new Promise(function(resolve, reject) {
-      loadRespackImageSingle(respack, image)
-      .catch(function() {
-        loadRespackImageAnimation(respack, image)
+      return new Promise(function(resolve, reject) {
+        loadRespackImageSingle(respack, image)
         .catch(function() {
-          reject(Error("Failed to load single image or animation of " + image["name"]));
+          loadRespackImageAnimation(respack, image)
+          .catch(function() {
+            reject(Error("Failed to load single image or animation of " + image["name"]));
+          })
+          .then(function() {
+            resolve(image);
+          })
         })
         .then(function() {
           resolve(image);
-        })
-      })
-      .then(function() {
-        resolve(image);
+        });
       });
-    });
+    }
   }
 
   var loadRespackImages = function(respack) {
