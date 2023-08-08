@@ -984,21 +984,6 @@
     });
   }
 
-  var loadRespackSongTrackFetch = function(uri) {
-    return new Promise(function(resolve, reject) {
-      fetch(uri)
-      .then(function(response) {
-        if (!response.ok) {
-          reject(Error("Failed to fetch " + uri + ": " +
-                response.status + " " + response.statusText));
-          return;
-        }
-        resolve(response.arrayBuffer())
-      })
-      .catch(reject)
-    });
-  }
-
   var loadRespackSongTrackDecode = function(buffer) {
     return new Promise(function(resolve, reject) {
       audioCtx.decodeAudioData(buffer, function(audioBuffer) {
@@ -1010,25 +995,15 @@
   }
 
   var loadRespackSongTrack = function(uri) {
+    var extensions = [".opus", ".ogg", ".mp3"];
     return new Promise(function(resolve, reject) {
-      loadRespackSongTrackFetch(uri + ".opus")
+      fetchResource(extensions.map(ext => uri+ext))
+      .then(response => response.arrayBuffer())
       .then(loadRespackSongTrackDecode)
       .then(resolve)
-      .catch(function(error) {
-        console.log("opus failed to load", error);
-        loadRespackSongTrackFetch(uri + ".ogg")
-        .then(loadRespackSongTrackDecode)
-        .then(resolve)
-        .catch(function() {
-          console.log("ogg failed to load: ", error);
-          loadRespackSongTrackFetch(uri + ".mp3")
-          .then(loadRespackSongTrackDecode)
-          .then(resolve)
-          .catch(function() {
-            console.log("mp3 failed to load: ", error);
-            reject(Error("Could not find any supported audio track formats"));
-          });
-        });
+      .catch(function() {
+        console.log("song failed to load: ", error);
+        reject(Error("Could not find any supported audio track formats"));
       });
     });
   }
