@@ -86,6 +86,9 @@ func LoadRespackZIP(filename string) (rp *Respack, err error) {
 	rp.Info.Name = rp.ID
 
 	for _, f := range r.File {
+		if f.FileInfo().IsDir() {
+			continue
+		}
 		ext := filepath.Ext(f.Name)
 		if ext == ".xml" {
 			if err := rp.loadZipXML(f); err != nil {

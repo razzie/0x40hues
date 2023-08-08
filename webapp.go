@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"mime"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -85,7 +86,11 @@ func GetHandlers(respacks []*Respack) http.Handler {
 	r.Get("/respacks/{respack}/*", func(w http.ResponseWriter, r *http.Request) {
 		respackID := chi.URLParam(r, "respack")
 		if respack, ok := respackMap[respackID]; ok {
-			filename := chi.URLParam(r, "*")
+			filename, err := url.QueryUnescape(chi.URLParam(r, "*"))
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 			f, err := respack.Open(filename)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusNotFound)
