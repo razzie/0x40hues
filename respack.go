@@ -77,9 +77,8 @@ func LoadRespackZIP(filename string) (rp *Respack, err error) {
 		}
 	}()
 
-	basename := filepath.Base(filename)
 	rp = &Respack{
-		ID:           strings.TrimSuffix(basename, filepath.Ext(basename)),
+		ID:           respackFilenameToID(filename),
 		fileHandlers: make(map[string]func() (fs.File, error)),
 		closer:       r,
 	}
@@ -108,10 +107,9 @@ func LoadRespackZIP(filename string) (rp *Respack, err error) {
 
 func LoadRespackFS(root fs.FS, path string) (*Respack, error) {
 	rp := &Respack{
+		ID:           respackFilenameToID(path),
 		fileHandlers: make(map[string]func() (fs.File, error)),
 	}
-	basename := filepath.Base(path)
-	rp.ID = strings.TrimSuffix(basename, filepath.Ext(basename))
 	if err := rp.loadFSDir(root, path); err != nil {
 		return nil, err
 	}
@@ -273,6 +271,12 @@ func (w *fileWrapper) Read(p []byte) (int, error) {
 
 func (w *fileWrapper) Close() error {
 	return w.rc.Close()
+}
+
+func respackFilenameToID(filename string) string {
+	basename := filepath.Base(filename)
+	id := strings.TrimSuffix(basename, filepath.Ext(basename))
+	return strings.ReplaceAll(id, " ", "_")
 }
 
 func detectXMLType(content []byte) (XMLType, error) {

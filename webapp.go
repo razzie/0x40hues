@@ -57,8 +57,7 @@ func GetHandlers(respacks []*Respack) http.Handler {
 		respacksT.Execute(w, respacks)
 	})
 
-	r.Get("/{respacks}/", func(w http.ResponseWriter, r *http.Request) {
-		respacks := strings.Split(chi.URLParam(r, "respacks"), "|")
+	renderRespacks := func(w http.ResponseWriter, respacks ...string) {
 		images := 0
 		for _, respackID := range respacks {
 			if respack, ok := respackMap[respackID]; ok {
@@ -72,15 +71,25 @@ func GetHandlers(respacks []*Respack) http.Handler {
 			respacks = append(respacks, "builtin_image")
 		}
 		huesT.Execute(w, &huesConfig{Respacks: respacks, AutoPlay: true})
+	}
+
+	r.Get("/{respack}/", func(w http.ResponseWriter, r *http.Request) {
+		respackID := chi.URLParam(r, "respack")
+		renderRespacks(w, respackID)
 	})
 
-	r.Post("/combine", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/custom/", func(w http.ResponseWriter, r *http.Request) {
+		respacks := strings.Split(r.URL.Query().Get("packs"), ",")
+		renderRespacks(w, respacks...)
+	})
+
+	r.Post("/custom", func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		respacks := make([]string, 0, len(r.Form))
 		for respack := range r.Form {
 			respacks = append(respacks, respack)
 		}
-		http.Redirect(w, r, "/"+strings.Join(respacks, "|")+"/", http.StatusSeeOther)
+		http.Redirect(w, r, "/custom/?packs="+strings.Join(respacks, ","), http.StatusSeeOther)
 	})
 
 	r.Get("/respacks/{respack}/*", func(w http.ResponseWriter, r *http.Request) {
