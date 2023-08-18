@@ -6,25 +6,27 @@
     <title>0x40 Hues - Respack selector</title>
     <link rel="stylesheet" type="text/css" media="all" href="/css/pico.min.css">
     <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">-->
+    <style>
+      .columns {
+        column-count: auto;
+        column-width: 350px;
+        column-gap: 20px;
+        padding-bottom: 20px;
+      }
+    </style>
   </head>
   <body>
     <main class="container">
       <form action="/custom" method="post">
-        <div class="grid">
-          <div>
-          {{ $columnSep := divide (len .) 3 }}
-          {{ range $i, $respack := . }}
-            {{ if and (mod $i $columnSep) (gt $i 0) }}
-          </div><div>
-            {{ end }}
-            <label>
-              <input type="checkbox" name="{{ $respack.ID }}" value="{{ $respack.ID }}" role="switch">
-              <a href="{{ $respack.ID }}/">{{ $respack.Name }}</a>
-              ({{ $respack.ImageCount }} image{{ if not (eq $respack.ImageCount 1) }}s{{ end }}
-              + {{ $respack.SongCount }} song{{ if not (eq $respack.SongCount 1) }}s{{ end }})
-            </label>
+        <div class="columns">
+          {{ range . }}
+          <label>
+            <input type="checkbox" name="{{ .ID }}" value="{{ .ID }}" role="switch">
+            <a href="{{ .ID }}/">{{ .Name }}</a>
+            ({{ .ImageCount }} image{{ if not (eq .ImageCount 1) }}s{{ end }}
+            + {{ .SongCount }} song{{ if not (eq .SongCount 1) }}s{{ end }})
+          </label>
           {{ end }}
-          </div>
         </div>
         <input type="submit" value="Combine">
       </form>
