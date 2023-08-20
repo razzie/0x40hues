@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -26,16 +27,12 @@ var (
 			return a / b
 		},
 	}
-	huesT       = must(loadTemplate("", "assets/index.html"))
-	respacksT   = must(loadTemplate("", "assets/respacks.html"))
-	builtinR    = must(LoadRespackFS(assets, "assets/builtin"))
-	builtinImgR = must(LoadRespackFS(assets, "assets/builtin_image"))
+	huesT        = must(loadTemplate("", "assets/index.html"))
+	respacksT    = must(loadTemplate("Respack selector", "assets/layout.html", "assets/respacks.html"))
+	respackInfoT = must(loadTemplate("Respack info", "assets/layout.html", "assets/respackinfo.html"))
+	builtinR     = must(LoadRespackFS(assets, "assets/builtin"))
+	builtinImgR  = must(LoadRespackFS(assets, "assets/builtin_image"))
 )
-
-type huesConfig struct {
-	Respacks []string `json:"respack"`
-	AutoPlay bool     `json:"autoPlay"`
-}
 
 func GetHandlers(respacks []*Respack) http.Handler {
 	respackMap := make(map[string]*Respack)
@@ -54,10 +51,11 @@ func GetHandlers(respacks []*Respack) http.Handler {
 	r.Get("/fonts/*", fs.ServeHTTP)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		respacksT.Execute(w, respacks)
+		respacks := filterRespacks(respacks, r.URL.Query().Get("search"))
+		respacksT(w, r, respacks)
 	})
 
-	renderRespacks := func(w http.ResponseWriter, respacks ...string) {
+	renderRespacks := func(w http.ResponseWriter, r *http.Request, respacks ...string) {
 		images := 0
 		for _, respackID := range respacks {
 			if respack, ok := respackMap[respackID]; ok {
@@ -70,17 +68,22 @@ func GetHandlers(respacks []*Respack) http.Handler {
 		if images == 0 {
 			respacks = append(respacks, "builtin_image")
 		}
-		huesT.Execute(w, &huesConfig{Respacks: respacks, AutoPlay: true})
+		song, _ := strconv.Atoi(r.URL.Query().Get("song"))
+		huesT(w, r, &huesConfig{
+			Respacks:    respacks,
+			DefaultSong: song,
+			AutoPlay:    true,
+		})
 	}
 
 	r.Get("/{respacks}/", func(w http.ResponseWriter, r *http.Request) {
 		respacks := strings.Split(chi.URLParam(r, "respacks"), ",")
-		renderRespacks(w, respacks...)
+		renderRespacks(w, r, respacks...)
 	})
 
 	r.Get("/custom/", func(w http.ResponseWriter, r *http.Request) {
 		respacks := strings.Split(r.URL.Query().Get("packs"), ",")
-		renderRespacks(w, respacks...)
+		renderRespacks(w, r, respacks...)
 	})
 
 	r.Post("/custom", func(w http.ResponseWriter, r *http.Request) {
@@ -113,19 +116,84 @@ func GetHandlers(respacks []*Respack) http.Handler {
 		}
 	})
 
+	r.Get("/respack-info/{respack}/", func(w http.ResponseWriter, r *http.Request) {
+		respackID := chi.URLParam(r, "respack")
+		if respack, ok := respackMap[respackID]; ok {
+			respackInfoT(w, r, respack)
+		} else {
+			http.Error(w, "Not Found", http.StatusNotFound)
+		}
+	})
+
 	return r
 }
 
-func loadTemplate(templateName, filename string) (*template.Template, error) {
-	bytes, err := assets.ReadFile(filename)
-	if err != nil {
-		return nil, err
+func filterRespacks(respacks []*Respack, query string) (results []*Respack) {
+	if query == "" {
+		return respacks
 	}
-	tmpl, err := template.New(templateName).Funcs(templateFuncs).Parse(string(bytes))
-	if err != nil {
-		return nil, err
+outer:
+	for _, rp := range respacks {
+		for _, image := range rp.Images.Image {
+			if strings.Contains(image.Name, query) || strings.Contains(image.FullName, query) {
+				results = append(results, rp)
+				continue outer
+			}
+		}
+		for _, song := range rp.Songs.Song {
+			if strings.Contains(song.Name, query) || strings.Contains(song.Title, query) {
+				results = append(results, rp)
+				continue outer
+			}
+		}
 	}
-	return tmpl, err
+	return
+}
+
+type huesConfig struct {
+	Respacks    []string `json:"respack"`
+	DefaultSong int      `json:"defaultSong"`
+	AutoPlay    bool     `json:"autoPlay"`
+}
+
+type tmplView struct {
+	Title string
+	Base  string
+	Data  any
+}
+
+func getView(r *http.Request, title string, data any) *tmplView {
+	view := &tmplView{
+		Title: title,
+		Base:  "/",
+		Data:  data,
+	}
+	if slashes := strings.Count(r.URL.Path, "/"); slashes > 1 {
+		view.Base = strings.Repeat("../", slashes-1)
+	}
+	return view
+}
+
+func loadTemplate(title string, filenames ...string) (func(w http.ResponseWriter, r *http.Request, data any), error) {
+	t := template.New("").Funcs(templateFuncs)
+	for _, filename := range filenames {
+		bytes, err := assets.ReadFile(filename)
+		if err != nil {
+			return nil, err
+		}
+		t, err = t.Parse(string(bytes))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return func(w http.ResponseWriter, r *http.Request, data any) {
+		if r.Header.Get("HX-Request") != "" {
+			t.ExecuteTemplate(w, "content", data)
+		} else {
+			view := getView(r, title, data)
+			t.Execute(w, view)
+		}
+	}, nil
 }
 
 func must[T any](t T, err error) T {

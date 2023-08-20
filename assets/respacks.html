@@ -1,35 +1,25 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>0x40 Hues - Respack selector</title>
-    <link rel="stylesheet" type="text/css" media="all" href="/css/pico.min.css">
-    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">-->
-    <style>
-      .columns {
-        column-count: auto;
-        column-width: 350px;
-        column-gap: 20px;
-        padding-bottom: 20px;
-      }
-    </style>
-  </head>
-  <body>
-    <main class="container">
-      <form action="/custom" method="post">
-        <div class="columns">
-          {{ range . }}
-          <label>
-            <input type="checkbox" name="{{ .ID }}" value="{{ .ID }}" role="switch">
-            <a href="{{ .ID }}/">{{ .Name }}</a>
-            ({{ .ImageCount }} image{{ if not (eq .ImageCount 1) }}s{{ end }}
-            + {{ .SongCount }} song{{ if not (eq .SongCount 1) }}s{{ end }})
-          </label>
-          {{ end }}
-        </div>
-        <input type="submit" value="Combine">
-      </form>
-    </main>
-  </body>
-</html>
+{{ define "content" }}
+<form action="/custom" method="post">
+  <div class="columns">
+  {{ if . }}
+    {{ range . }}
+    <label>
+      <input type="checkbox" name="{{ .ID }}" value="{{ .ID }}" role="switch">
+      <a href="{{ .ID }}/">{{ .Name }}</a>
+      (<a href="respack-info/{{ .ID }}/"
+        data-target="modal" onClick="toggleModal(event)"
+        hx-get="respack-info/{{ .ID }}/" hx-target="#modal-inner">
+        {{ .ImageCount }} image{{ if not (eq .ImageCount 1) }}s{{ end }} +
+        {{ .SongCount }} song{{ if not (eq .SongCount 1) }}s{{ end }}
+      </a>)
+    </label>
+    {{ end }}
+  {{ else }}
+    No results!
+  {{ end }}
+  </div>
+  {{ if gt (len .) 1 }}
+  <input type="submit" value="Combine">
+  {{ end }}
+</form>
+{{ end }}

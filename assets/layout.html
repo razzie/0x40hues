@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>0x40 Hues{{ if .Title}} - {{ .Title }}{{ end }}</title>
+    <base href="{{ .Base }}" target="_self">
+    <script type="text/javascript" src="js/htmx.min.js"></script>
+    <script type="text/javascript" src="js/modal.js"></script>
+    <link rel="stylesheet" type="text/css" media="all" href="/css/pico.min.css">
+    <style>
+      .columns {
+        column-count: auto;
+        column-width: 350px;
+        column-gap: 20px;
+        padding-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="content" class="container">
+    {{ template "content" .Data }}
+    </main>
+    <dialog id="modal">
+      <article id="modal-inner"></article>
+    </dialog>
+  </body>
+</html>

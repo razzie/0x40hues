@@ -34,6 +34,7 @@ type Respack struct {
 	Images struct {
 		XMLName xml.Name `xml:"images"`
 		Image   []struct {
+			URI           string `xml:"-"`
 			Name          string `xml:"name,attr"`
 			FullName      string `xml:"fullname,omitempty"`
 			CenterPixel   *int   `xml:"centerPixel,omitempty"`
@@ -45,6 +46,7 @@ type Respack struct {
 	Songs struct {
 		XMLName xml.Name `xml:"songs"`
 		Song    []struct {
+			URI           string `xml:"-"`
 			Name          string `xml:"name,attr"`
 			Title         string `xml:"title,omitempty"`
 			Rhythm        string `xml:"rythm,omitempty"`
@@ -102,6 +104,8 @@ func LoadRespackZIP(filename string) (rp *Respack, err error) {
 		}
 	}
 
+	rp.resolveURIs()
+
 	return rp, nil
 }
 
@@ -113,6 +117,7 @@ func LoadRespackFS(root fs.FS, path string) (*Respack, error) {
 	if err := rp.loadFSDir(root, path); err != nil {
 		return nil, err
 	}
+	rp.resolveURIs()
 	return rp, nil
 }
 
@@ -192,6 +197,50 @@ func (rp *Respack) unmarshal(r io.Reader) error {
 		}
 	}
 	return err
+}
+
+func (rp *Respack) resolveURI(resourceName string, extensions []string) (string, bool) {
+	for _, ext := range extensions {
+		if _, ok := rp.fileHandlers[resourceName+ext]; ok {
+			return rp.ID + "/" + resourceName + ext, true
+		}
+	}
+	return "", false
+}
+
+func (rp *Respack) resolveImageURI(imageName string) (string, bool) {
+	extensions := []string{".png", ".jpg", ".gif"}
+	if uri, ok := rp.resolveURI(imageName, extensions); ok {
+		return uri, true
+	}
+	if uri, ok := rp.resolveURI(imageName+"_1", extensions); ok {
+		return uri, true
+	}
+	if uri, ok := rp.resolveURI(imageName+"_01", extensions); ok {
+		return uri, true
+	}
+	if uri, ok := rp.resolveURI(imageName+"_001", extensions); ok {
+		return uri, true
+	}
+	return "", false
+}
+
+func (rp *Respack) resolveSongURI(songName string) (string, bool) {
+	extensions := []string{".opus", ".ogg", ".mp3"}
+	return rp.resolveURI(songName, extensions)
+}
+
+func (rp *Respack) resolveURIs() {
+	for i, image := range rp.Images.Image {
+		if imageURI, ok := rp.resolveImageURI(image.Name); ok {
+			rp.Images.Image[i].URI = imageURI
+		}
+	}
+	for i, song := range rp.Songs.Song {
+		if songURI, ok := rp.resolveSongURI(song.Name); ok {
+			rp.Songs.Song[i].URI = songURI
+		}
+	}
 }
 
 func (rp *Respack) Name() string {

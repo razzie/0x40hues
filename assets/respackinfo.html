@@ -1,0 +1,58 @@
+{{ define "content" }}
+
+{{ if .Info.Name }}
+<p>
+    <strong>Name:</strong>
+    {{ .Info.Name }}
+</p>
+{{ end }}
+
+{{ if .Info.Author }}
+<p>
+    <strong>Author:</strong>
+    {{ .Info.Author }}
+</p>
+{{ end }}
+
+{{ if .Info.Description }}
+<p>
+    <strong>Description:</strong>
+    {{ .Info.Description }}
+</p>
+{{ end }}
+
+{{ if .Info.Link }}
+<p>
+    <strong>Link:</strong>
+    <a href="{{ .Info.Link }}">{{ .Info.Link }}</a>
+</p>
+{{ end }}
+
+{{ if .Hues.Hue }}
+<p>Hues:</p>
+<ul class="columns">
+    {{ range .Hues.Hue }}
+    <li>{{ .Name }} - <span style="color: {{ .Color }};">{{ .Color }}</span></li>
+    {{ end }}
+</ul>
+{{ end }}
+
+{{ if .Images.Image }}
+<p>Images:</p>
+<ul class="columns">
+    {{ range .Images.Image }}
+    <li><a href="../respacks/{{ .URI }}" target="_blank">{{ or .FullName .Name }}</a></li>
+    {{ end }}
+</ul>
+{{ end }}
+
+{{ if .Songs.Song }}
+<p>Songs:</p>
+<ul class="columns">
+    {{ range .Songs.Song }}
+    <li><a href="../respacks/{{ .URI }}" target="_blank">{{ or .Title .Name }}</a></li>
+    {{ end }}
+</ul>
+{{ end }}
+
+{{ end }}
