@@ -51,8 +51,12 @@ func GetHandlers(respacks []*Respack) http.Handler {
 	r.Get("/fonts/*", fs.ServeHTTP)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		respacks := filterRespacks(respacks, r.URL.Query().Get("search"))
-		respacksT(w, r, respacks)
+		search := r.URL.Query().Get("search")
+		respacks := filterRespacks(respacks, search)
+		respacksT(w, r, &respacksView{
+			Search:   search,
+			Respacks: respacks,
+		})
 	})
 
 	renderRespacks := func(w http.ResponseWriter, r *http.Request, respacks ...string) {
@@ -132,22 +136,30 @@ func filterRespacks(respacks []*Respack, query string) (results []*Respack) {
 	if query == "" {
 		return respacks
 	}
+	query = strings.ToLower(query)
 outer:
 	for _, rp := range respacks {
 		for _, image := range rp.Images.Image {
-			if strings.Contains(image.Name, query) || strings.Contains(image.FullName, query) {
+			if strings.Contains(strings.ToLower(image.Name), query) ||
+				strings.Contains(strings.ToLower(image.FullName), query) {
 				results = append(results, rp)
 				continue outer
 			}
 		}
 		for _, song := range rp.Songs.Song {
-			if strings.Contains(song.Name, query) || strings.Contains(song.Title, query) {
+			if strings.Contains(strings.ToLower(song.Name), query) ||
+				strings.Contains(strings.ToLower(song.Title), query) {
 				results = append(results, rp)
 				continue outer
 			}
 		}
 	}
 	return
+}
+
+type respacksView struct {
+	Search   string
+	Respacks []*Respack
 }
 
 type huesConfig struct {

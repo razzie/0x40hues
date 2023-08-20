@@ -1,8 +1,14 @@
 {{ define "content" }}
+<input type="search" id="search" name="search" placeholder="Search"
+  value="{{ .Search }}"
+  hx-get="/"
+  hx-trigger="keyup delay:500ms changed"
+  hx-target="#content"
+>
 <form action="/custom" method="post">
   <div class="columns">
-  {{ if . }}
-    {{ range . }}
+  {{ if .Respacks }}
+    {{ range .Respacks }}
     <label>
       <input type="checkbox" name="{{ .ID }}" value="{{ .ID }}" role="switch">
       <a href="{{ .ID }}/">{{ .Name }}</a>
@@ -18,7 +24,7 @@
     No results!
   {{ end }}
   </div>
-  {{ if gt (len .) 1 }}
+  {{ if gt (len .Respacks) 1 }}
   <input type="submit" value="Combine">
   {{ end }}
 </form>
