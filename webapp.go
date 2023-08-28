@@ -49,6 +49,7 @@ func GetHandlers(respacks []*Respack) http.Handler {
 	r.Get("/css/*", fs.ServeHTTP)
 	r.Get("/js/*", fs.ServeHTTP)
 	r.Get("/fonts/*", fs.ServeHTTP)
+	r.Get("/favicon.ico", fs.ServeHTTP)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		search := r.URL.Query().Get("search")
