@@ -9,16 +9,22 @@
   <div class="columns">
   {{ if .Respacks }}
     {{ range .Respacks }}
-    <label>
-      <input type="checkbox" name="{{ .ID }}" value="{{ .ID }}" role="switch">
-      <a href="{{ .ID }}/">{{ .Name }}</a>
-      (<a href="respack-info/{{ .ID }}/"
-        data-target="modal" onClick="toggleModal(event)"
-        hx-get="respack-info/{{ .ID }}/" hx-target="#modal-inner">
-        {{ .ImageCount }} image{{ if not (eq .ImageCount 1) }}s{{ end }} +
-        {{ .SongCount }} song{{ if not (eq .SongCount 1) }}s{{ end }}
-      </a>)
-    </label>
+    <div x-data="{ fav: $persist(0).as('fav-{{ .ID }}') }">
+      <label>
+        <input type="checkbox" name="{{ .ID }}" value="{{ .ID }}" role="switch">
+        <a href="{{ .ID }}/">{{ .Name }}</a>
+        <span x-on:click.prevent="fav = !fav">
+          <span x-show="fav">&#x2605;</span>
+          <span x-show="!fav">&#x2606;</span>
+        </span>
+        (<a href="respack-info/{{ .ID }}/"
+          data-target="modal" onClick="toggleModal(event)"
+          hx-get="respack-info/{{ .ID }}/" hx-target="#modal-inner">
+          {{ .ImageCount }} image{{ if not (eq .ImageCount 1) }}s{{ end }} +
+          {{ .SongCount }} song{{ if not (eq .SongCount 1) }}s{{ end }}
+        </a>)
+      </label>
+    </div>
     {{ end }}
   {{ else }}
     No results!
