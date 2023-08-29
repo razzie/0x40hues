@@ -69,6 +69,9 @@
     /* Handle for the beat analysis animation frame callback. */
     beatAnalysisHandle: null,
 
+    /* Handle for fallback rendering callback when there is no song to play */
+    fallbackRenderHandle: null,
+
     /* Length of a beat in the current song */
     beatDuration: null,
     /* Information about the current beat */
@@ -1550,6 +1553,7 @@
     var song = self["songs"][songIndex];
     if (song === undefined) {
       console.log("Song not found at index " + songIndex);
+      startFallbackRender();
       return;
     }
     self["songIndex"] = songIndex;
@@ -1958,6 +1962,7 @@
   }
 
   var startBeatAnalysis = function() {
+    stopFallbackRender();
     if (self["beatAnalysisHandle"] === null) {
       console.log("Starting beat analysis");
       self["beatAnalysisHandle"] = window.requestAnimationFrame(beatAnalyze);
@@ -1965,15 +1970,37 @@
   };
 
   var stopBeatAnalysis = function() {
-    console.log("Stopping beat analysis");
     var handle = self["beatAnalysisHandle"];
     if (handle !== null) {
+      console.log("Stopping beat analysis");
       window.cancelAnimationFrame(self["beatAnalysisHandle"]);
       self["beatAnalysisHandle"] = null;
     }
     var beat = { "buildup": null, "loop": null };
     self["beat"] = beat;
     self.callEventListeners("beat", beat);
+    startFallbackRender();
+  };
+
+  var fallbackRender = function() {
+    self.callEventListeners("frame", audioCtx.currentTime);
+    self["fallbackRenderHandle"] = window.requestAnimationFrame(fallbackRender);
+  };
+
+  var startFallbackRender = function() {
+    if (self["fallbackRenderHandle"] === null) {
+      console.log("Starting fallback render");
+      self["fallbackRenderHandle"] = window.requestAnimationFrame(fallbackRender);
+    }
+  };
+
+  var stopFallbackRender = function() {
+    var handle = self["fallbackRenderHandle"];
+    if (handle !== null) {
+      console.log("Stopping fallback render");
+      window.cancelAnimationFrame(self["fallbackRenderHandle"]);
+      self["fallbackRenderHandle"] = null;
+    }
   };
 
 
