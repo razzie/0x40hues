@@ -50,6 +50,7 @@ type Respack struct {
 			Name          string `xml:"name,attr"`
 			Title         string `xml:"title,omitempty"`
 			Rhythm        string `xml:"rythm,omitempty"`
+			BuildupURI    string `xml:"-"`
 			Buildup       string `xml:"buildup,omitempty"`
 			BuildupRhythm string `xml:"buildupRhythm,omitempty"`
 			CharsPerBeat  *int   `xml:"charsPerBeat,omitempty"`
@@ -200,6 +201,9 @@ func (rp *Respack) unmarshal(r io.Reader) error {
 }
 
 func (rp *Respack) resolveURI(resourceName string, extensions []string) (string, bool) {
+	if resourceName == "" {
+		return "", false
+	}
 	for _, ext := range extensions {
 		if _, ok := rp.fileHandlers[resourceName+ext]; ok {
 			return rp.ID + "/" + resourceName + ext, true
@@ -239,6 +243,9 @@ func (rp *Respack) resolveURIs() {
 	for i, song := range rp.Songs.Song {
 		if songURI, ok := rp.resolveSongURI(song.Name); ok {
 			rp.Songs.Song[i].URI = songURI
+		}
+		if buildupURI, ok := rp.resolveSongURI(song.Buildup); ok {
+			rp.Songs.Song[i].BuildupURI = buildupURI
 		}
 	}
 }

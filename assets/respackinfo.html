@@ -50,7 +50,12 @@
 <p>Songs:</p>
 <ul class="columns">
     {{ range .Songs.Song }}
-    <li><a href="../respacks/{{ .URI }}" target="_blank">{{ or .Title .Name }}</a></li>
+    <li>
+        <a href="../respacks/{{ .URI }}" target="_blank">{{ or .Title .Name }}</a>
+        {{ if .Buildup }}
+        <small>+ <a href="../respacks/{{ .BuildupURI }}" target="_blank">buildup</a></small>
+        {{ end }}
+    </li>
     {{ end }}
 </ul>
 {{ end }}
