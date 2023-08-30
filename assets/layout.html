@@ -6,7 +6,7 @@
     <title>0x40 Hues{{ if .Title}} - {{ .Title }}{{ end }}</title>
     <base href="{{ .Base }}" target="_self">
     <script type="text/javascript" src="js/alpinejs.persist.min.js"></script>
-    <script type="text/javascript" src="js/alpinejs.min.js"></script>
+    <script defer type="text/javascript" src="js/alpinejs.min.js"></script>
     <script type="text/javascript" src="js/htmx.min.js"></script>
     <script type="text/javascript" src="js/modal.js"></script>
     <link rel="stylesheet" type="text/css" media="all" href="/css/pico.min.css">
@@ -16,6 +16,28 @@
         column-width: 350px;
         column-gap: 20px;
         padding-bottom: 20px;
+      }
+      .tooltip-container {
+        break-inside: avoid-column;
+        position: relative;
+        cursor: pointer;
+      }
+
+      .tooltip {
+        display: none;
+        position: absolute;
+        top: -50%;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 10px;
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .tooltip-container:hover .tooltip {
+        display: block;
       }
     </style>
   </head>

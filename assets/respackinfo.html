@@ -1,62 +1,111 @@
 {{ define "content" }}
+{{ $ID := .ID }}
 
 {{ if .Info.Name }}
 <p>
-    <strong>Name:</strong>
-    {{ .Info.Name }}
+  <strong>Name:</strong>
+  {{ .Info.Name }}
+  <span x-data="{ fav: $persist(0).as('fav-{{ $ID }}') }" x-on:click.prevent="fav = !fav">
+    <span x-show="fav">&#x2605;</span>
+    <span x-show="!fav">&#x2606;</span>
+  </span>
 </p>
 {{ end }}
 
 {{ if .Info.Author }}
 <p>
-    <strong>Author:</strong>
-    {{ .Info.Author }}
+  <strong>Author:</strong>
+  {{ .Info.Author }}
 </p>
 {{ end }}
 
 {{ if .Info.Description }}
 <p>
-    <strong>Description:</strong>
-    {{ .Info.Description }}
+  <strong>Description:</strong>
+  {{ .Info.Description }}
 </p>
 {{ end }}
 
 {{ if .Info.Link }}
 <p>
-    <strong>Link:</strong>
-    <a href="{{ .Info.Link }}">{{ .Info.Link }}</a>
+  <strong>Link:</strong>
+  <a href="{{ .Info.Link }}">{{ .Info.Link }}</a>
 </p>
 {{ end }}
 
 {{ if .Hues.Hue }}
 <p>Hues:</p>
 <ul class="columns">
-    {{ range .Hues.Hue }}
-    <li>{{ .Name }} - <span style="color: {{ .Color }};">{{ .Color }}</span></li>
-    {{ end }}
+  {{ range .Hues.Hue }}
+  <li>
+    {{ .Name }} - <span style="color: {{ .Color }};">{{ .Color }}</span>
+    <span x-data="{ fav: $persist(0).as('favhue-{{ $ID }}-{{ .Name }}') }" x-on:click.prevent="fav = !fav">
+      <span x-show="fav">&#x2605;</span>
+      <span x-show="!fav">&#x2606;</span>
+    </span>
+  </li>
+  {{ end }}
 </ul>
 {{ end }}
 
 {{ if .Images.Image }}
 <p>Images:</p>
 <ul class="columns">
-    {{ range .Images.Image }}
-    <li><a href="../respacks/{{ .URI }}" target="_blank">{{ or .FullName .Name }}</a></li>
-    {{ end }}
+  {{ range .Images.Image }}
+  <li>
+    <div class="tooltip-container">
+      <a href="../respacks/{{ .URI }}" target="_blank">{{ or .FullName .Name }}</a>
+      <span x-data="{ fav: $persist(0).as('favimg-{{ $ID }}-{{ .Name }}') }" x-on:click.prevent="fav = !fav">
+        <span x-show="fav">&#x2605;</span>
+        <span x-show="!fav">&#x2606;</span>
+      </span>
+      <div class="tooltip">
+        <img src="../respacks/{{ .URI }}">
+      </div>
+    </div>
+  </li>
+  {{ end }}
 </ul>
 {{ end }}
 
 {{ if .Songs.Song }}
 <p>Songs:</p>
-<ul class="columns">
-    {{ range .Songs.Song }}
-    <li>
-        <a href="../respacks/{{ .URI }}" target="_blank">{{ or .Title .Name }}</a>
-        {{ if .Buildup }}
-        <small>+ <a href="../respacks/{{ .BuildupURI }}" target="_blank">buildup</a></small>
-        {{ end }}
-    </li>
+<ul class="columns" x-data="{
+    currentSong: null,
+    play: function(song) {
+      if (this.currentSong !== null) {
+        var audio = $refs[this.currentSong];
+        audio.pause();
+        audio.currentTime = 0;
+      }
+      this.currentSong = song;
+      $refs[song].play();
+    }
+  }">
+  {{ range .Songs.Song }}
+  <li>
+    <a href="../respacks/{{ .URI }}" target="_blank"
+      x-on:click.prevent="play('{{ .Name }}')">{{ or .Title .Name }}</a>
+    {{ if .Buildup }}
+    <small>
+      + <a href="../respacks/{{ .BuildupURI }}" target="_blank"
+          x-on:click.prevent="play('{{ .Buildup }}')">buildup</a>
+    </small>
     {{ end }}
+    <span x-data="{ fav: $persist(0).as('favsong-{{ $ID }}-{{ .Name }}') }" x-on:click.prevent="fav = !fav">
+      <span x-show="fav">&#x2605;</span>
+      <span x-show="!fav">&#x2606;</span>
+    </span>
+    <audio x-ref="{{ .Name }}">
+      <source src="../respacks/{{ .URI }}" />
+    </audio>
+    {{ if .Buildup }}
+    <audio x-ref="{{ .Buildup }}">
+      <source src="../respacks/{{ .BuildupURI }}" />
+    </audio>
+    {{ end }}
+    </li>
+  {{ end }}
 </ul>
 {{ end }}
 
